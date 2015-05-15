@@ -13,10 +13,11 @@ javaOptions += "-server"
 libraryDependencies ++= {
   Seq(
     // Scala Section
-    "com.twitter"   % "util-logging_2.11" % "6.24.0",
+    "com.typesafe.akka" %% "akka-actor"        % "2.3.11",
+    "com.twitter"       %  "util-logging_2.11" % "6.24.0",
     // Java Section
-    "org.twitter4j" % "twitter4j-core"    % "[3.0,)",
-    "org.slf4j"     % "slf4j-nop"         % "1.6.4",
-    "log4j"         % "log4j"             % "1.2.17"
+    "org.twitter4j"     %  "twitter4j-core"    % "[3.0,)",
+    "org.slf4j"         %  "slf4j-nop"         % "1.6.4",
+    "log4j"             %  "log4j"             % "1.2.17"
   )
 }

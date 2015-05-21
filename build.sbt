@@ -2,7 +2,7 @@ name := "susuru"
 
 version := "0.0.0"
 
-organization := "info.toming"
+organization := "toming"
 
 scalaVersion := "2.11.1"
 

@@ -1,4 +1,4 @@
-package info.toming.susuru.wrapper
+package twitter4j.susuru.wrapper
 
 import twitter4j.auth.Authorization
 import twitter4j.conf.Configuration

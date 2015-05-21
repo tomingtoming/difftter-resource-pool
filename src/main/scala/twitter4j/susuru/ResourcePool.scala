@@ -1,9 +1,9 @@
-package info.toming.susuru
+package twitter4j.susuru
 
 import akka.actor._
-import info.toming.susuru.actor.RateLimitActor
-import info.toming.susuru.wrapper.TwitterWrapper
 import twitter4j.Twitter
+import twitter4j.susuru.actor.RateLimitActor
+import twitter4j.susuru.wrapper.TwitterWrapper
 
 import scala.concurrent.duration.Duration
 

@@ -1,4 +1,4 @@
-package info.toming.susuru.wrapper
+package twitter4j.susuru.wrapper
 
 import akka.actor.ActorRef
 import twitter4j.api.TrendsResources

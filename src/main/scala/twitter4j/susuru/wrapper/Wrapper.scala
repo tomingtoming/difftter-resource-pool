@@ -1,11 +1,12 @@
-package info.toming.susuru.wrapper
+package twitter4j.susuru.wrapper
 
 import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorRef
 import akka.pattern._
 import akka.util.Timeout
-import info.toming.susuru.actor.{LeaseResourcePersonal, LeaseResourcePublic}
+import info.toming.susuru.actor.LeaseResourcePersonal
+import twitter4j.susuru.actor.{LeaseResourcePersonal, LeaseResourcePublic}
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration

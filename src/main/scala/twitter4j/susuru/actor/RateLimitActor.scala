@@ -1,4 +1,4 @@
-package info.toming.susuru.actor
+package twitter4j.susuru.actor
 
 import akka.actor.{Actor, ActorRef}
 import com.twitter.logging.Logger

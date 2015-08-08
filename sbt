@@ -1,5 +1,5 @@
-#!/bin/bash
-JARURL=https://repo.typesafe.com/typesafe/ivy-releases/org.scala-sbt/sbt-launch/0.13.8/sbt-launch.jar
+#!/bin/bash -au
+JARURL=http://central.maven.org/maven2/com/typesafe/sbt/sbt-launcher/0.13.6/sbt-launcher-0.13.6.jar
 JARFILE=$(dirname $0)/sbt-launch.jar
 
 if [ ! -e "$JARFILE" ]

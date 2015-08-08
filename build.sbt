@@ -4,7 +4,7 @@ version := "0.0.0"
 
 organization := "toming"
 
-scalaVersion := "2.11.1"
+scalaVersion := "2.11.6"
 
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature")
 

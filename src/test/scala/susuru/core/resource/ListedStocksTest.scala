@@ -37,7 +37,7 @@ class ListedStocksTest extends Specification with Mockito {
     ls.permitted() must not contain(23L)
     ls.forbidden() must not contain(23L)
     ls.permitted() must contain(42L)
-    ls.forbidden() must contain(42L)
+    ls.forbidden() must not contain(42L)
   }
 
   def forbitUntilNow = {
@@ -47,6 +47,6 @@ class ListedStocksTest extends Specification with Mockito {
     ls.permitted() must not contain(23L)
     ls.forbidden() must not contain(23L)
     ls.permitted() must contain(42L)
-    ls.forbidden() must contain(42L)
+    ls.forbidden() must not contain(42L)
   }
 }

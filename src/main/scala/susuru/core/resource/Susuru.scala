@@ -27,6 +27,10 @@ class Susuru[T, R](source: () => Map[Id, T], update: R => (Int, EpochTimeMillis)
     source().foreach { case (id, t) => supplies.put(id, new Supply[T](t, 1, Long.MaxValue)) }
     while (!killed) {
       matching()
+      supplies.map(_._2.until).min - System.currentTimeMillis() match {
+        case n if 0 < n => demands.synchronized(demands.wait(n))
+        case _ => demands.synchronized(demands.wait())
+      }
     }
   }
 
@@ -76,6 +80,7 @@ class Susuru[T, R](source: () => Map[Id, T], update: R => (Int, EpochTimeMillis)
   def loanDo[R2 <: R](idOption: Option[Long])(f: T => R2): Future[R2] = {
     val demand = Demand(idOption, f, Promise[R2]())
     demands.enqueue(demand.copy(promise = demand.promise.asInstanceOf[Promise[R]]))
+    demands.synchronized(demands.notify())
     demand.promise.future
   }
 }

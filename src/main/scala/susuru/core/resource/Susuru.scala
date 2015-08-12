@@ -73,9 +73,9 @@ class Susuru[T, R](source: () => Map[Id, T], update: R => (Int, EpochTimeMillis)
     }
   }
 
-  def loanDo(idOption: Option[Long])(f: T => R): Future[R] = {
-    val demand = Demand(idOption, f, Promise[R]())
-    demands.enqueue(demand)
+  def loanDo[R2 <: R](idOption: Option[Long])(f: T => R2): Future[R2] = {
+    val demand = Demand(idOption, f, Promise[R2]())
+    demands.enqueue(demand.copy(promise = demand.promise.asInstanceOf[Promise[R]]))
     demand.promise.future
   }
 }

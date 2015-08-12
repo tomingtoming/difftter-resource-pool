@@ -27,15 +27,11 @@ class TwitterSusuruTest extends Specification with Mockito {
     responce.iterator() returns List().iterator.asJava
     twitter.lookupUsers(1L, 2L, 3L) returns responce
     val susuru = new TwitterSusuru(() => Map(1L -> twitter))
-    var a: List[Long] = Nil
     try {
       susuru.start()
       Await.result(susuru.loanDo(Some(1L)) { twitter =>
-        val res: ResponseList[User] = twitter.lookupUsers(1L, 2L, 3L)
-        a = res.asScala.map(_.getId).toList
-        res
-      }, Duration("10.0s"))
-      a mustEqual List()
+        twitter.lookupUsers(1L, 2L, 3L)
+      }, Duration("10.0s")).asScala.map(_.getId).toList mustEqual List()
     } finally {
       susuru.kill()
     }

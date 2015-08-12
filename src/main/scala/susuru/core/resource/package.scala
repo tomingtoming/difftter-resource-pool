@@ -5,6 +5,6 @@ import scala.concurrent.{Promise, Future}
 import scala.math.Ordering
 
 package object resource {
-  type EpochTime = Long
+  type EpochTimeMillis = Long
   type Id = Long
 }

@@ -1,2 +1,2 @@
 # susuru (啜る)
-Management modules for management RateLimit on Twitter4J.
+Management modules to use up RateLimit on Twitter4J.

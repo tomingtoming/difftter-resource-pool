@@ -24,13 +24,23 @@ class Susuru[T, R](source: () => Map[Id, T], update: R => (Int, EpochTimeMillis)
   def kill(): Unit = killed = true
 
   override def run(): Unit = {
-    source().foreach { case (id, t) => supplies.put(id, new Supply[T](t, 1, Long.MaxValue)) }
-    while (!killed) {
-      matching()
-      supplies.map(_._2.until).min - System.currentTimeMillis() match {
-        case n if 0 < n => demands.synchronized(demands.wait(n))
-        case _ => demands.synchronized(demands.wait())
+    try {
+      source().foreach { case (id, t) => supplies.put(id, new Supply[T](t, 1, Long.MaxValue)) }
+      while (!killed) {
+        matching()
+        supplies.map(_._2.until).min - System.currentTimeMillis() match {
+          case n if 0 < n =>
+            logger.debug(s"Susuru will wait: demands.synchronized(demands.wait($n))")
+            demands.synchronized(demands.wait(n))
+            logger.debug(s"Susuru was notified: demands.synchronized(demands.wait($n))")
+          case _ =>
+            logger.debug("Susuru will wait: demands.synchronized(demands.wait())")
+            demands.synchronized(demands.wait())
+            logger.debug("Susuru was notified: demands.synchronized(demands.wait())")
+        }
       }
+    } finally {
+      demands.dequeueAll(_ => true).foreach(_.promise.failure(new SusuruKilledException("Susuru terminated just now.")))
     }
   }
 
@@ -39,7 +49,8 @@ class Susuru[T, R](source: () => Map[Id, T], update: R => (Int, EpochTimeMillis)
    * @param now Now time in milli seconds, Default: system time.
    */
   def matching(now: Long = System.currentTimeMillis()): Unit = {
-    logger.debug("Market matching start: demands length = " + demands.length)
+    logger.debug(s"Market matching start: demands.length = ${demands.length}")
+    logger.debug(s"Market matching start: supplies = ${supplies.toString()}")
     demands.dequeueAll { demand =>
       logger.debug("supplies: " + supplies)
       supplies.collectFirst {
@@ -75,13 +86,20 @@ class Susuru[T, R](source: () => Map[Id, T], update: R => (Int, EpochTimeMillis)
           false
       }
     }
+    logger.debug(s"Market matching end: demands.length = ${demands.length}")
+    logger.debug(s"Market matching end: supplies = ${supplies.toString()}")
   }
 
   def loanDo[R2 <: R](idOption: Option[Long])(f: T => R2): Future[R2] = {
-    val demand = Demand(idOption, f, Promise[R2]())
-    demands.enqueue(demand.copy(promise = demand.promise.asInstanceOf[Promise[R]]))
-    demands.synchronized(demands.notify())
-    demand.promise.future
+    if(!killed) {
+      val demand = Demand(idOption, f, Promise[R2]())
+      logger.debug(s"Enqueue market and notify: $idOption")
+      demands.enqueue(demand.copy(promise = demand.promise.asInstanceOf[Promise[R]]))
+      demands.synchronized(demands.notify())
+      demand.promise.future
+    } else {
+      Future.failed(new SusuruKilledException("Susuru already terminated."))
+    }
   }
 }
 

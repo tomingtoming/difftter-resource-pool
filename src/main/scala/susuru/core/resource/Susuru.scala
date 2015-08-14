@@ -2,8 +2,8 @@ package susuru.core.resource
 
 import org.apache.log4j.Logger
 
-import scala.concurrent.{Promise, Future}
 import scala.collection.mutable
+import scala.concurrent.{Future, Promise}
 
 /**
  * Stock resources and matching on demand.
@@ -54,17 +54,11 @@ class Susuru[T, R](source: () => Map[Id, T], update: R => (Int, EpochTimeMillis)
     demands.dequeueAll { demand =>
       logger.debug("supplies: " + supplies)
       supplies.collectFirst {
-        case (id, supply) if demand.idOption.isDefined && demand.idOption.get == id && now + margin < supply.until && 0 < supply.count =>
-          logger.debug("Match case:1 when a supply remaining resouce with specified id exists.")
+        case (id, supply) if demand.idOption.map(_ == id).getOrElse(true) && now + margin < supply.until && 0 < supply.count =>
+          logger.debug("Match case:1 when a supply remaining resouce exists.")
           (id, supply)
-        case (id, supply) if demand.idOption.isDefined && demand.idOption.get == id && supply.until < now + margin =>
-          logger.debug("Match case:2 when a supply reset resouce with specified id exists.")
-          (id, supply)
-        case (id, supply) if demand.idOption.isEmpty && now + margin < supply.until && 0 < supply.count =>
-          logger.debug("Match case:3 when a supply remaining resouce with id unspecified exists.")
-          (id, supply)
-        case (id, supply) if demand.idOption.isEmpty && supply.until < now + margin =>
-          logger.debug("Match case:4 when a supply reset resouce with id unspecified exists.")
+        case (id, supply) if demand.idOption.map(_ == id).getOrElse(true) && supply.until < now + margin =>
+          logger.debug("Match case:2 when a supply reset resouce exists.")
           (id, supply)
       } match {
         case Some((id, supply)) =>
@@ -91,7 +85,7 @@ class Susuru[T, R](source: () => Map[Id, T], update: R => (Int, EpochTimeMillis)
   }
 
   def loanDo[R2 <: R](idOption: Option[Long])(f: T => R2): Future[R2] = {
-    if(!killed) {
+    if (!killed) {
       val demand = Demand(idOption, f, Promise[R2]())
       logger.debug(s"Enqueue market and notify: $idOption")
       demands.enqueue(demand.copy(promise = demand.promise.asInstanceOf[Promise[R]]))

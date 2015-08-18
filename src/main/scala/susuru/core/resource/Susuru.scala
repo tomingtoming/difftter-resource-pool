@@ -21,7 +21,10 @@ class Susuru[T, R](source: () => Map[Id, T], update: R => (Int, EpochTimeMillis)
   val supplies: mutable.Map[Id, Supply[T]] = mutable.Map.empty[Id, Supply[T]]
   val demands: mutable.Queue[Demand[T, R]] = mutable.Queue.empty[Demand[T, R]]
 
-  def kill(): Unit = killed = true
+  def kill(): Unit = {
+    killed = true
+    demands.synchronized(demands.notify())
+  }
 
   override def run(): Unit = {
     try {

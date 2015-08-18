@@ -31,15 +31,19 @@ class Susuru[T, R](source: () => Map[Id, T], update: R => (Int, EpochTimeMillis)
       source().foreach { case (id, t) => supplies.put(id, new Supply[T](t, 1, Long.MaxValue)) }
       while (!killed) {
         matching()
-        supplies.map(_._2.until).min - System.currentTimeMillis() match {
-          case n if 0 < n =>
-            logger.debug(s"Susuru will wait: demands.synchronized(demands.wait($n))")
-            demands.synchronized(demands.wait(n))
-            logger.debug(s"Susuru was notified: demands.synchronized(demands.wait($n))")
-          case _ =>
-            logger.debug("Susuru will wait: demands.synchronized(demands.wait())")
-            demands.synchronized(demands.wait())
-            logger.debug("Susuru was notified: demands.synchronized(demands.wait())")
+        demands.synchronized {
+          supplies.map(_._2.until).min - System.currentTimeMillis() match {
+            case _ if 0 < demands.length =>
+              logger.debug(s"Susuru will not wait: demands exists.")
+            case n if 0 < n =>
+              logger.debug(s"Susuru will wait: demands.synchronized(demands.wait($n))")
+              demands.wait(n)
+              logger.debug(s"Susuru was notified: demands.synchronized(demands.wait($n))")
+            case _ =>
+              logger.debug("Susuru will wait: demands.synchronized(demands.wait())")
+              demands.wait()
+              logger.debug("Susuru was notified: demands.synchronized(demands.wait())")
+          }
         }
       }
     } finally {

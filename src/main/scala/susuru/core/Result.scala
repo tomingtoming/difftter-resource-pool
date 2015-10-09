@@ -1,5 +1,13 @@
 package susuru.core
 
-trait Result {
+sealed class Result[R]
 
-}
+case class Void[R]() extends Result[R]
+
+case class NotExists[R]() extends Result[R]
+
+case class WaitNotify[R](any: Any) extends Result[R]
+
+case class Wait[R](until: Long) extends Result[R]
+
+case class Lease[R](resource: Resource[R]) extends Result[R]

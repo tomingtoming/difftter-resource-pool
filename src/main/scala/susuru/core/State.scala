@@ -1,5 +1,5 @@
 package susuru.core
 
-trait State {
-  def query(q: Query, at: Long): (Result, State)
+trait State[R] {
+  def query(q: Query[R]): (Result[R], State[R])
 }

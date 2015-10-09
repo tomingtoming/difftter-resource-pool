@@ -1,12 +1,13 @@
 package susuru.core
 
-sealed case class Query[R]()
+sealed class Query[R]
 
-case class AddResource[R](id: Long, r: R) extends Query
+case class Add[R](id: Long, resource: R) extends Query[R]
 
-case class DelResource[R](id: Long) extends Query
+case class Delete[R](id: Long) extends Query[R]
 
-case class LeaseResource[R](id: Long) extends Query
+case class LeaseSome[R](id: Long, at: Long) extends Query[R]
 
-case class ReleaseResource[R](id: Long) extends Query
+case class LeaseAny[R](at: Long) extends Query[R]
 
+case class Release[R](resource: Resource[R]) extends Query[R]

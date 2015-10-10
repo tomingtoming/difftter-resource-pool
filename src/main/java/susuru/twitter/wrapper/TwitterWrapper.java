@@ -3,7 +3,10 @@ package susuru.twitter.wrapper;
 import susuru.core.Pool;
 import twitter4j.*;
 import twitter4j.api.*;
-import twitter4j.auth.*;
+import twitter4j.auth.AccessToken;
+import twitter4j.auth.Authorization;
+import twitter4j.auth.OAuth2Token;
+import twitter4j.auth.RequestToken;
 import twitter4j.conf.Configuration;
 import twitter4j.util.function.Consumer;
 
@@ -1225,7 +1228,12 @@ public class TwitterWrapper implements Twitter, FriendsFollowersResources, Users
         Twitter twitter = pool.lease();
         result = twitter.lookupUsers(longs);
         RateLimitStatus limit = result.getRateLimitStatus();
-        pool.release(twitter.getId(), limit.getRemaining(), limit.getResetTimeInSeconds() ,twitter);
+        pool.release(
+                twitter.getId(),
+                limit.getRemaining(),
+                (long) limit.getResetTimeInSeconds() * 1000,
+                twitter
+        );
         return result;
     }
 

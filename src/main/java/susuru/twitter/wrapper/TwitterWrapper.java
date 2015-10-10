@@ -1,5 +1,6 @@
 package susuru.twitter.wrapper;
 
+import susuru.core.Pool;
 import twitter4j.*;
 import twitter4j.api.*;
 import twitter4j.auth.*;
@@ -12,12 +13,10 @@ import java.util.Map;
 
 public class TwitterWrapper implements Twitter, FriendsFollowersResources, UsersResources, SavedSearchesResources, SuggestedUsersResources, DirectMessagesResources, TweetsResources, PlacesGeoResources, FavoritesResources, SpamReportingResource, TrendsResources, ListsResources, TimelinesResources, HelpResources, SearchResource {
 
-    private Twitter twitter = null;
+    Pool<Twitter> pool;
 
-    public RateLimitStatus rateLimit = null;
-
-    public TwitterWrapper(Twitter twitter) {
-        this.twitter = twitter;
+    public TwitterWrapper(Pool<Twitter> pool) {
+        this.pool = pool;
     }
 
     @Override
@@ -1223,8 +1222,10 @@ public class TwitterWrapper implements Twitter, FriendsFollowersResources, Users
     @Override
     public ResponseList<User> lookupUsers(long... longs) throws TwitterException {
         ResponseList<User> result;
+        Twitter twitter = pool.lease();
         result = twitter.lookupUsers(longs);
-        rateLimit = result.getRateLimitStatus();
+        RateLimitStatus limit = result.getRateLimitStatus();
+        pool.release(twitter.getId(), limit.getRemaining(), limit.getResetTimeInSeconds() ,twitter);
         return result;
     }
 

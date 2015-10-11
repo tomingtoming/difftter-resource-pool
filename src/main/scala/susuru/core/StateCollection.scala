@@ -2,7 +2,9 @@ package susuru.core
 
 case class StateCollection[R](_idMap: Map[Long, Resource[R]]) extends State[R] {
   def this() = this(Map.empty[Long, Resource[R]])
+
   private val idMap: Map[Long, Resource[R]] = _idMap
+
   override def query(q: Query[R]): (Result[R], State[R]) = q match {
     case Add(id, resource) =>
       (Void(), StateCollection(idMap + (id -> Resource(id, Int.MaxValue, Long.MaxValue, resource))))
@@ -12,7 +14,7 @@ case class StateCollection[R](_idMap: Map[Long, Resource[R]]) extends State[R] {
       idMap.get(id) match {
         case Some(res) if res.count < 0 =>
           // Resource is now leasing.
-          (WaitNotify(res), this)
+          (WaitNotify(res.body), this)
         case Some(res) if res.until < at && 0 == res.count =>
           // Within the time limit, limit the number of times over.
           (Wait(res.until), this)

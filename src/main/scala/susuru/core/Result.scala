@@ -6,7 +6,7 @@ case class Void[R]() extends Result[R]
 
 case class NotExists[R]() extends Result[R]
 
-case class WaitNotify[R](any: Any) extends Result[R]
+case class WaitNotify[R](r: R) extends Result[R]
 
 case class Wait[R](until: Long) extends Result[R]
 

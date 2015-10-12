@@ -17,8 +17,14 @@ import java.util.Map;
 public class TwitterWrapper implements Twitter, FriendsFollowersResources, UsersResources, SavedSearchesResources, SuggestedUsersResources, DirectMessagesResources, TweetsResources, PlacesGeoResources, FavoritesResources, SpamReportingResource, TrendsResources, ListsResources, TimelinesResources, HelpResources, SearchResource {
 
     Pool<Twitter> pool;
+    long id = -1;
 
     public TwitterWrapper(Pool<Twitter> pool) {
+        this.pool = pool;
+    }
+
+    public TwitterWrapper(long id, Pool<Twitter> pool) {
+        this.id = id;
         this.pool = pool;
     }
 

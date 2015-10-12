@@ -8,18 +8,27 @@ import twitter4j.Twitter
 
 object TwitterPool {
   private var pool: TwitterPool = null
+
   def singleton(): Unit = this.synchronized {
-    if(pool == null) {
+    if (pool == null) {
       pool = new TwitterPool
     }
   }
 
   def getInstance(): Twitter = {
-    new TwitterWrapper(pool)
+    if (pool != null) {
+      new TwitterWrapper(pool)
+    } else {
+      throw new InstantiationException("Instance of TwitterPool are not created yet.")
+    }
   }
 
   def getInstance(id: Long): Twitter = {
-    new TwitterWrapper(id, pool)
+    if (pool != null) {
+      new TwitterWrapper(id, pool)
+    } else {
+      throw new InstantiationException("Instance of TwitterPool are not created yet.")
+    }
   }
 }
 

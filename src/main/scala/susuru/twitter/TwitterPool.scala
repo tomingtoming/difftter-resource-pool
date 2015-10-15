@@ -9,9 +9,9 @@ import twitter4j.Twitter
 object TwitterPool {
   private var pool: TwitterPool = null
 
-  def singleton(): Unit = this.synchronized {
+  def singleton(refresh: Set[Long] => Map[Long, Twitter]): Unit = this.synchronized {
     if (pool == null) {
-      pool = new TwitterPool
+      pool = new TwitterPool(refresh)
     }
   }
 
@@ -32,7 +32,7 @@ object TwitterPool {
   }
 }
 
-class TwitterPool extends Pool[Twitter] {
+class TwitterPool(refresh: Set[Long] => Map[Long, Twitter]) extends Pool[Twitter] {
 
   private var state: State[Twitter] = new StateCollection[Twitter]()
 

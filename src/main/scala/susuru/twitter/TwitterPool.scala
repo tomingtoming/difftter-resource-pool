@@ -44,6 +44,7 @@ class TwitterPool extends Pool[Twitter] {
         twitter.body
       case (Wait(until), newState) =>
         state = newState
+        TimeUnit.MILLISECONDS.sleep(until - at)
         lease()
       case (response, newState) =>
         state = newState

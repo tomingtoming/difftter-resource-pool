@@ -36,8 +36,9 @@ class TwitterPool extends Pool[Twitter] {
 
   private var state: State[Twitter] = new StateCollection[Twitter]()
 
-  override def lease(at: Long = System.currentTimeMillis()): Twitter = state.synchronized {
-    state.query(LeaseAny(System.currentTimeMillis())) match {
+  override def lease(): Twitter = state.synchronized {
+    val at: Long = System.currentTimeMillis()
+    state.query(LeaseAny(at)) match {
       case (Lease(twitter), newState) =>
         state = newState
         twitter.body
@@ -50,7 +51,8 @@ class TwitterPool extends Pool[Twitter] {
     }
   }
 
-  override def lease(id: Long, at: Long = System.currentTimeMillis()): Twitter = state.synchronized {
+  override def lease(id: Long): Twitter = state.synchronized {
+    val at: Long = System.currentTimeMillis()
     state.query(LeaseSome(id, at)) match {
       case (Lease(twitter), newState) =>
         state = newState

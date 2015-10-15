@@ -2,7 +2,7 @@ package susuru.core
 
 sealed class Query[R]
 
-case class Add[R](id: Long, resource: R) extends Query[R]
+case class Add[R](resources: Map[Long, R]) extends Query[R]
 
 case class Delete[R](id: Long) extends Query[R]
 

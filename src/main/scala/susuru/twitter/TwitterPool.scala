@@ -9,9 +9,9 @@ import twitter4j.Twitter
 object TwitterPool {
   private var pool: TwitterPool = null
 
-  def singleton(refresh: Set[Long] => Map[Long, Twitter]): Unit = this.synchronized {
+  def singleton(refresh: Set[Long] => Map[Long, Twitter], interval: Long = 300000): Unit = this.synchronized {
     if (pool == null) {
-      pool = new TwitterPool(refresh)
+      pool = new TwitterPool(refresh, interval)
     }
   }
 
@@ -32,12 +32,20 @@ object TwitterPool {
   }
 }
 
-class TwitterPool(refresh: Set[Long] => Map[Long, Twitter]) extends Pool[Twitter] {
+private class TwitterPool(refresh: Set[Long] => Map[Long, Twitter], interval: Long) extends Pool[Twitter] {
 
   private var state: State[Twitter] = new StateCollection[Twitter]()
+  private var lastRefreshedTime: Long = 0L
+
+  private def refreshOnDemand(at: Long = System.currentTimeMillis()): Unit = {
+    if(at < lastRefreshedTime + interval) {
+      state.query(Add(refresh(state.idSet)))
+    }
+  }
 
   override def lease(): Twitter = state.synchronized {
     val at: Long = System.currentTimeMillis()
+    refreshOnDemand(at)
     state.query(LeaseAny(at)) match {
       case (Lease(twitter), newState) =>
         state = newState
@@ -54,6 +62,7 @@ class TwitterPool(refresh: Set[Long] => Map[Long, Twitter]) extends Pool[Twitter
 
   override def lease(id: Long): Twitter = state.synchronized {
     val at: Long = System.currentTimeMillis()
+    refreshOnDemand(at)
     state.query(LeaseSome(id, at)) match {
       case (Lease(twitter), newState) =>
         state = newState

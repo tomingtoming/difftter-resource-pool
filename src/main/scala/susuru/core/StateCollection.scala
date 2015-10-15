@@ -5,9 +5,13 @@ case class StateCollection[R](_idMap: Map[Long, Resource[R]]) extends State[R] {
 
   private val idMap: Map[Long, Resource[R]] = _idMap
 
+  override def idSet: Set[Long] = idMap.keySet
+
   override def query(q: Query[R]): (Result[R], State[R]) = q match {
-    case Add(id, resource) =>
-      (Void(), StateCollection(idMap + (id -> Resource(id, Int.MaxValue, Long.MaxValue, resource))))
+    case Add(resources) =>
+      (Void(), StateCollection(idMap ++ resources.map {
+        case (id, resource) => (id, Resource(id, Int.MaxValue, Long.MaxValue, resource))
+      }))
     case Delete(id) =>
       (Void(), StateCollection(idMap - id))
     case LeaseSome(id, at) =>

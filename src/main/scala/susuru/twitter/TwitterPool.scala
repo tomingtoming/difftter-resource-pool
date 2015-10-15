@@ -38,7 +38,7 @@ private class TwitterPool(refresh: Set[Long] => Map[Long, Twitter], interval: Lo
   private var lastRefreshedTime: Long = 0L
 
   private def refreshOnDemand(at: Long = System.currentTimeMillis()): Unit = {
-    if(at < lastRefreshedTime + interval) {
+    if(lastRefreshedTime + interval < at) {
       state.query(Add(refresh(state.idSet)))
     }
   }

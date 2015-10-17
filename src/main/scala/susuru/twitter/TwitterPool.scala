@@ -72,7 +72,7 @@ private class TwitterPool(refresh: Set[Long] => Map[Long, Twitter], interval: Lo
       case (Wait(until), newState) =>
         state = newState
         TimeUnit.MILLISECONDS.sleep(until - at)
-        lease()
+        lease(id)
       case (WaitNotify(twitter), newState) =>
         state = newState
         twitter.synchronized(twitter.wait())

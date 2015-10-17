@@ -41,6 +41,7 @@ private class TwitterPool(refresh: Set[Long] => Map[Long, Twitter], interval: Lo
     if(lastRefreshedTime + interval < at) {
       val (_, newState) = state.query(Add(refresh(state.idSet)))
       state = newState
+      lastRefreshedTime = at
     }
   }
 

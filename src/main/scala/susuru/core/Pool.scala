@@ -1,10 +1,10 @@
 package susuru.core
 
-trait Pool[R] {
+trait Pool[RSC, RSP] {
 
-  def lease(): R
+  def lease(): RSC
 
-  def lease(id: Long): R
+  def lease(id: Long): RSC
 
-  def release(id: Long, count: Int, until: Long, resource: R): Unit
+  def release(id: Long, resource: RSC, response: RSP): Unit
 }

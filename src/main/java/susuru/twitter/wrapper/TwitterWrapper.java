@@ -16,14 +16,14 @@ import java.util.Map;
 
 public class TwitterWrapper implements Twitter, FriendsFollowersResources, UsersResources, SavedSearchesResources, SuggestedUsersResources, DirectMessagesResources, TweetsResources, PlacesGeoResources, FavoritesResources, SpamReportingResource, TrendsResources, ListsResources, TimelinesResources, HelpResources, SearchResource {
 
-    Pool<Twitter> pool;
+    Pool<Twitter, TwitterResponse> pool;
     long id = -1;
 
-    public TwitterWrapper(Pool<Twitter> pool) {
+    public TwitterWrapper(Pool<Twitter, TwitterResponse> pool) {
         this.pool = pool;
     }
 
-    public TwitterWrapper(long id, Pool<Twitter> pool) {
+    public TwitterWrapper(long id, Pool<Twitter, TwitterResponse> pool) {
         this.id = id;
         this.pool = pool;
     }
@@ -191,16 +191,9 @@ public class TwitterWrapper implements Twitter, FriendsFollowersResources, Users
     @Override
     public IDs getFriendsIDs(long cursor) throws TwitterException {
         if (id != -1) {
-            IDs result;
             Twitter twitter = pool.lease(id);
-            result = twitter.getFriendsIDs(cursor);
-            RateLimitStatus limit = result.getRateLimitStatus();
-            pool.release(
-                    twitter.getId(),
-                    limit.getRemaining(),
-                    (long) limit.getResetTimeInSeconds() * 1000,
-                    twitter
-            );
+            IDs result = twitter.getFriendsIDs(cursor);
+            pool.release(twitter.getId(), twitter, result);
             return result;
         } else {
             throw new IllegalStateException("Twitter does not have id");
@@ -209,77 +202,42 @@ public class TwitterWrapper implements Twitter, FriendsFollowersResources, Users
 
     @Override
     public IDs getFriendsIDs(long userId, long cursor) throws TwitterException {
-        IDs result;
         Twitter twitter = pool.lease();
-        result = twitter.getFriendsIDs(userId, cursor);
-        RateLimitStatus limit = result.getRateLimitStatus();
-        pool.release(
-                twitter.getId(),
-                limit.getRemaining(),
-                (long) limit.getResetTimeInSeconds() * 1000,
-                twitter
-        );
+        IDs result = twitter.getFriendsIDs(userId, cursor);
+        pool.release(twitter.getId(), twitter, result);
         return result;
     }
 
     @Override
     public IDs getFriendsIDs(long userId, long cursor, int count) throws TwitterException {
-        IDs result;
         Twitter twitter = pool.lease();
-        result = twitter.getFriendsIDs(userId, cursor, count);
-        RateLimitStatus limit = result.getRateLimitStatus();
-        pool.release(
-                twitter.getId(),
-                limit.getRemaining(),
-                (long) limit.getResetTimeInSeconds() * 1000,
-                twitter
-        );
+        IDs result = twitter.getFriendsIDs(userId, cursor, count);
+        pool.release(twitter.getId(), twitter, result);
         return result;
     }
 
     @Override
     public IDs getFriendsIDs(String screenName, long cursor) throws TwitterException {
-        IDs result;
         Twitter twitter = pool.lease();
-        result = twitter.getFriendsIDs(screenName, cursor);
-        RateLimitStatus limit = result.getRateLimitStatus();
-        pool.release(
-                twitter.getId(),
-                limit.getRemaining(),
-                (long) limit.getResetTimeInSeconds() * 1000,
-                twitter
-        );
+        IDs result = twitter.getFriendsIDs(screenName, cursor);
+        pool.release(twitter.getId(), twitter, result);
         return result;
     }
 
     @Override
     public IDs getFriendsIDs(String screenName, long cursor, int count) throws TwitterException {
-        IDs result;
         Twitter twitter = pool.lease();
-        result = twitter.getFriendsIDs(screenName, cursor, count);
-        RateLimitStatus limit = result.getRateLimitStatus();
-        pool.release(
-                twitter.getId(),
-                limit.getRemaining(),
-                (long) limit.getResetTimeInSeconds() * 1000,
-                twitter
-        );
+        IDs result = twitter.getFriendsIDs(screenName, cursor, count);
+        pool.release(twitter.getId(), twitter, result);
         return result;
     }
 
     @Override
     public IDs getFollowersIDs(long cursor) throws TwitterException {
         if (id != -1) {
-            IDs result;
             Twitter twitter = pool.lease(id);
-            result = twitter.getFollowersIDs(cursor);
-            RateLimitStatus limit = result.getRateLimitStatus();
-            pool.release(
-                    twitter.getId(),
-                    limit.getRemaining(),
-                    (long) limit.getResetTimeInSeconds() * 1000,
-                    twitter
-            );
+            IDs result = twitter.getFollowersIDs(cursor);
+            pool.release(twitter.getId(), twitter, result);
             return result;
         } else {
             throw new IllegalStateException("Twitter does not have id");
@@ -288,61 +246,33 @@ public class TwitterWrapper implements Twitter, FriendsFollowersResources, Users
 
     @Override
     public IDs getFollowersIDs(long userId, long cursor) throws TwitterException {
-        IDs result;
         Twitter twitter = pool.lease();
-        result = twitter.getFollowersIDs(userId, cursor);
-        RateLimitStatus limit = result.getRateLimitStatus();
-        pool.release(
-                twitter.getId(),
-                limit.getRemaining(),
-                (long) limit.getResetTimeInSeconds() * 1000,
-                twitter
-        );
+        IDs result = twitter.getFollowersIDs(userId, cursor);
+        pool.release(twitter.getId(), twitter, result);
         return result;
     }
 
     @Override
     public IDs getFollowersIDs(long userId, long cursor, int count) throws TwitterException {
-        IDs result;
         Twitter twitter = pool.lease();
-        result = twitter.getFollowersIDs(userId, cursor, count);
-        RateLimitStatus limit = result.getRateLimitStatus();
-        pool.release(
-                twitter.getId(),
-                limit.getRemaining(),
-                (long) limit.getResetTimeInSeconds() * 1000,
-                twitter
-        );
+        IDs result = twitter.getFollowersIDs(userId, cursor, count);
+        pool.release(twitter.getId(), twitter, result);
         return result;
     }
 
     @Override
     public IDs getFollowersIDs(String screenName, long cursor) throws TwitterException {
-        IDs result;
         Twitter twitter = pool.lease();
-        result = twitter.getFollowersIDs(screenName, cursor);
-        RateLimitStatus limit = result.getRateLimitStatus();
-        pool.release(
-                twitter.getId(),
-                limit.getRemaining(),
-                (long) limit.getResetTimeInSeconds() * 1000,
-                twitter
-        );
+        IDs result = twitter.getFollowersIDs(screenName, cursor);
+        pool.release(twitter.getId(), twitter, result);
         return result;
     }
 
     @Override
     public IDs getFollowersIDs(String screenName, long cursor, int count) throws TwitterException {
-        IDs result;
         Twitter twitter = pool.lease();
-        result = twitter.getFollowersIDs(screenName, cursor, count);
-        RateLimitStatus limit = result.getRateLimitStatus();
-        pool.release(
-                twitter.getId(),
-                limit.getRemaining(),
-                (long) limit.getResetTimeInSeconds() * 1000,
-                twitter
-        );
+        IDs result = twitter.getFollowersIDs(screenName, cursor, count);
+        pool.release(twitter.getId(), twitter, result);
         return result;
     }
 
@@ -1338,16 +1268,9 @@ public class TwitterWrapper implements Twitter, FriendsFollowersResources, Users
 
     @Override
     public ResponseList<User> lookupUsers(long... longs) throws TwitterException {
-        ResponseList<User> result;
         Twitter twitter = pool.lease();
-        result = twitter.lookupUsers(longs);
-        RateLimitStatus limit = result.getRateLimitStatus();
-        pool.release(
-                twitter.getId(),
-                limit.getRemaining(),
-                (long) limit.getResetTimeInSeconds() * 1000,
-                twitter
-        );
+        ResponseList<User> result = twitter.lookupUsers(longs);
+        pool.release(twitter.getId(), twitter, result);
         return result;
     }
 

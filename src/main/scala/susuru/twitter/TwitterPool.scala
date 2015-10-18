@@ -4,7 +4,7 @@ import java.util.concurrent.TimeUnit
 
 import susuru.core._
 import susuru.twitter.wrapper.TwitterWrapper
-import twitter4j.Twitter
+import twitter4j.{Twitter, TwitterResponse}
 
 object TwitterPool {
   private var pool: TwitterPool = null
@@ -32,13 +32,13 @@ object TwitterPool {
   }
 }
 
-private class TwitterPool(refresh: Set[Long] => Map[Long, Twitter], interval: Long) extends Pool[Twitter] {
+private class TwitterPool(refresh: Set[Long] => Map[Long, Twitter], interval: Long) extends Pool[Twitter, TwitterResponse] {
 
   private var state: State[Twitter] = new StateCollection[Twitter]()
   private var lastRefreshedTime: Long = 0L
 
   private def refreshOnDemand(at: Long = System.currentTimeMillis()): Unit = {
-    if(lastRefreshedTime + interval < at) {
+    if (lastRefreshedTime + interval < at) {
       val (_, newState) = state.query(Add(refresh(state.idSet)))
       state = newState
       lastRefreshedTime = at
@@ -83,10 +83,17 @@ private class TwitterPool(refresh: Set[Long] => Map[Long, Twitter], interval: Lo
     }
   }
 
-  override def release(id: Long, count: Int, until: Long, resource: Twitter): Unit = state.synchronized {
-    state.query(Release(Resource(id, count, until, resource))) match {
-      case (_, newState) =>
-        state = newState
-    }
+  override def release(id: Long, resource: Twitter, response: TwitterResponse): Unit = state.synchronized {
+    val limit = response.getRateLimitStatus
+    state = state.query(
+      Release(
+        Resource(
+          id,
+          limit.getRemaining,
+          limit.getResetTimeInSeconds.toLong * 1000,
+          resource
+        )
+      )
+    )._2
   }
 }

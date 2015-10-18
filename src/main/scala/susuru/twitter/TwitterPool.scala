@@ -85,5 +85,6 @@ private class TwitterPool(refresh: Set[Long] => Map[Long, Twitter], interval: Lo
   override def release(id: Long, resource: Twitter, response: TwitterResponse): Unit = state.synchronized {
     val limit = response.getRateLimitStatus
     state = state.release(Resource(id, limit.getRemaining, limit.getResetTimeInSeconds.toLong * 1000, resource))
+    resource.synchronized(resource.notify())
   }
 }

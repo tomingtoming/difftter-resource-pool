@@ -39,8 +39,7 @@ private class TwitterPool(refresh: Set[Long] => Map[Long, Twitter], interval: Lo
 
   private def refreshOnDemand(at: Long = System.currentTimeMillis()): Unit = {
     if (lastRefreshedTime + interval < at) {
-      val (_, newState) = state.query(Add(refresh(state.idSet)))
-      state = newState
+      state = state.add(refresh(state.idSet))
       lastRefreshedTime = at
     }
   }
@@ -48,7 +47,7 @@ private class TwitterPool(refresh: Set[Long] => Map[Long, Twitter], interval: Lo
   override def lease(): Twitter = state.synchronized {
     val at: Long = System.currentTimeMillis()
     refreshOnDemand(at)
-    state.query(LeaseAny(at)) match {
+    state.leaseAny(at) match {
       case (Lease(twitter), newState) =>
         state = newState
         twitter.body
@@ -65,7 +64,7 @@ private class TwitterPool(refresh: Set[Long] => Map[Long, Twitter], interval: Lo
   override def lease(id: Long): Twitter = state.synchronized {
     val at: Long = System.currentTimeMillis()
     refreshOnDemand(at)
-    state.query(LeaseSome(id, at)) match {
+    state.leaseSome(id, at) match {
       case (Lease(twitter), newState) =>
         state = newState
         twitter.body
@@ -85,15 +84,6 @@ private class TwitterPool(refresh: Set[Long] => Map[Long, Twitter], interval: Lo
 
   override def release(id: Long, resource: Twitter, response: TwitterResponse): Unit = state.synchronized {
     val limit = response.getRateLimitStatus
-    state = state.query(
-      Release(
-        Resource(
-          id,
-          limit.getRemaining,
-          limit.getResetTimeInSeconds.toLong * 1000,
-          resource
-        )
-      )
-    )._2
+    state = state.release(Resource(id, limit.getRemaining, limit.getResetTimeInSeconds.toLong * 1000, resource))
   }
 }

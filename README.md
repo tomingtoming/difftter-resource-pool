@@ -8,9 +8,8 @@ import susuru.twitter.TwitterPool
 import twitter4j.Twitter
 // Initialize pool with function to get Map[Long(id), Twitter] excepting specified ids.
 TwitterPool singleton { idSet: Set[Long] =>
-  TwitterRepository.getAll.filter { (twitter: Twitter) =>
-    !idSet.contains(twitter.getId)
-  }
+  val all: Map[Long, Twitter] = TwitterRepository.getAll
+  all.filterKeys(!idSet.contains(_))
 }
 ```
 

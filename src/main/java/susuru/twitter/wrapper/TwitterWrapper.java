@@ -1,8 +1,12 @@
 package susuru.twitter.wrapper;
 
+import susuru.core.Pool;
 import twitter4j.*;
 import twitter4j.api.*;
-import twitter4j.auth.*;
+import twitter4j.auth.AccessToken;
+import twitter4j.auth.Authorization;
+import twitter4j.auth.OAuth2Token;
+import twitter4j.auth.RequestToken;
 import twitter4j.conf.Configuration;
 import twitter4j.util.function.Consumer;
 
@@ -12,12 +16,16 @@ import java.util.Map;
 
 public class TwitterWrapper implements Twitter, FriendsFollowersResources, UsersResources, SavedSearchesResources, SuggestedUsersResources, DirectMessagesResources, TweetsResources, PlacesGeoResources, FavoritesResources, SpamReportingResource, TrendsResources, ListsResources, TimelinesResources, HelpResources, SearchResource {
 
-    private Twitter twitter = null;
+    Pool<Twitter, TwitterResponse> pool;
+    long id = -1;
 
-    public RateLimitStatus rateLimit = null;
+    public TwitterWrapper(Pool<Twitter, TwitterResponse> pool) {
+        this.pool = pool;
+    }
 
-    public TwitterWrapper(Twitter twitter) {
-        this.twitter = twitter;
+    public TwitterWrapper(long id, Pool<Twitter, TwitterResponse> pool) {
+        this.id = id;
+        this.pool = pool;
     }
 
     @Override
@@ -181,53 +189,91 @@ public class TwitterWrapper implements Twitter, FriendsFollowersResources, Users
     }
 
     @Override
-    public IDs getFriendsIDs(long l) throws TwitterException {
-        throw new TwitterException("Sorry! not implemented yet");
+    public IDs getFriendsIDs(long cursor) throws TwitterException {
+        if (id != -1) {
+            Twitter twitter = pool.lease(id);
+            IDs result = twitter.getFriendsIDs(cursor);
+            pool.release(twitter.getId(), twitter, result);
+            return result;
+        } else {
+            throw new IllegalStateException("Twitter does not have id");
+        }
     }
 
     @Override
-    public IDs getFriendsIDs(long l, long l1) throws TwitterException {
-        throw new TwitterException("Sorry! not implemented yet");
+    public IDs getFriendsIDs(long userId, long cursor) throws TwitterException {
+        Twitter twitter = pool.lease();
+        IDs result = twitter.getFriendsIDs(userId, cursor);
+        pool.release(twitter.getId(), twitter, result);
+        return result;
     }
 
     @Override
-    public IDs getFriendsIDs(long l, long l1, int i) throws TwitterException {
-        throw new TwitterException("Sorry! not implemented yet");
+    public IDs getFriendsIDs(long userId, long cursor, int count) throws TwitterException {
+        Twitter twitter = pool.lease();
+        IDs result = twitter.getFriendsIDs(userId, cursor, count);
+        pool.release(twitter.getId(), twitter, result);
+        return result;
     }
 
     @Override
-    public IDs getFriendsIDs(String s, long l) throws TwitterException {
-        throw new TwitterException("Sorry! not implemented yet");
+    public IDs getFriendsIDs(String screenName, long cursor) throws TwitterException {
+        Twitter twitter = pool.lease();
+        IDs result = twitter.getFriendsIDs(screenName, cursor);
+        pool.release(twitter.getId(), twitter, result);
+        return result;
     }
 
     @Override
-    public IDs getFriendsIDs(String s, long l, int i) throws TwitterException {
-        throw new TwitterException("Sorry! not implemented yet");
+    public IDs getFriendsIDs(String screenName, long cursor, int count) throws TwitterException {
+        Twitter twitter = pool.lease();
+        IDs result = twitter.getFriendsIDs(screenName, cursor, count);
+        pool.release(twitter.getId(), twitter, result);
+        return result;
     }
 
     @Override
-    public IDs getFollowersIDs(long l) throws TwitterException {
-        throw new TwitterException("Sorry! not implemented yet");
+    public IDs getFollowersIDs(long cursor) throws TwitterException {
+        if (id != -1) {
+            Twitter twitter = pool.lease(id);
+            IDs result = twitter.getFollowersIDs(cursor);
+            pool.release(twitter.getId(), twitter, result);
+            return result;
+        } else {
+            throw new IllegalStateException("Twitter does not have id");
+        }
     }
 
     @Override
-    public IDs getFollowersIDs(long l, long l1) throws TwitterException {
-        throw new TwitterException("Sorry! not implemented yet");
+    public IDs getFollowersIDs(long userId, long cursor) throws TwitterException {
+        Twitter twitter = pool.lease();
+        IDs result = twitter.getFollowersIDs(userId, cursor);
+        pool.release(twitter.getId(), twitter, result);
+        return result;
     }
 
     @Override
-    public IDs getFollowersIDs(long l, long l1, int i) throws TwitterException {
-        throw new TwitterException("Sorry! not implemented yet");
+    public IDs getFollowersIDs(long userId, long cursor, int count) throws TwitterException {
+        Twitter twitter = pool.lease();
+        IDs result = twitter.getFollowersIDs(userId, cursor, count);
+        pool.release(twitter.getId(), twitter, result);
+        return result;
     }
 
     @Override
-    public IDs getFollowersIDs(String s, long l) throws TwitterException {
-        throw new TwitterException("Sorry! not implemented yet");
+    public IDs getFollowersIDs(String screenName, long cursor) throws TwitterException {
+        Twitter twitter = pool.lease();
+        IDs result = twitter.getFollowersIDs(screenName, cursor);
+        pool.release(twitter.getId(), twitter, result);
+        return result;
     }
 
     @Override
-    public IDs getFollowersIDs(String s, long l, int i) throws TwitterException {
-        throw new TwitterException("Sorry! not implemented yet");
+    public IDs getFollowersIDs(String screenName, long cursor, int count) throws TwitterException {
+        Twitter twitter = pool.lease();
+        IDs result = twitter.getFollowersIDs(screenName, cursor, count);
+        pool.release(twitter.getId(), twitter, result);
+        return result;
     }
 
     @Override
@@ -1222,9 +1268,9 @@ public class TwitterWrapper implements Twitter, FriendsFollowersResources, Users
 
     @Override
     public ResponseList<User> lookupUsers(long... longs) throws TwitterException {
-        ResponseList<User> result;
-        result = twitter.lookupUsers(longs);
-        rateLimit = result.getRateLimitStatus();
+        Twitter twitter = pool.lease();
+        ResponseList<User> result = twitter.lookupUsers(longs);
+        pool.release(twitter.getId(), twitter, result);
         return result;
     }
 

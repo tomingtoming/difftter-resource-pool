@@ -15,7 +15,7 @@ object TwitterPool {
     }
   }
 
-  def getInstance(): Twitter = {
+  def getInstance(): Twitter = this.synchronized {
     if (pool != null) {
       new TwitterWrapper(pool)
     } else {
@@ -23,7 +23,7 @@ object TwitterPool {
     }
   }
 
-  def getInstance(id: Long): Twitter = {
+  def getInstance(id: Long): Twitter = this.synchronized {
     if (pool != null) {
       new TwitterWrapper(id, pool)
     } else {

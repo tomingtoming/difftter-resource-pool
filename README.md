@@ -6,6 +6,7 @@ Management modules to use up RateLimit on Twitter4J.
 ```scala
 import susuru.twitter.TwitterPool
 import twitter4j.Twitter
+// Initialize pool with function to get Map[Long(id), Twitter] excepting specified ids.
 TwitterPool singleton { idSet: Set[Long] =>
   TwitterRepository.getAll.filter { (twitter: Twitter) =>
     !idSet.contains(twitter.getId)

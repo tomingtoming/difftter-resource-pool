@@ -2,6 +2,7 @@ package susuru.twitter
 
 import java.util.concurrent.TimeUnit
 
+import org.slf4j.LoggerFactory
 import susuru.core._
 import susuru.twitter.wrapper.TwitterWrapper
 import twitter4j.{Twitter, TwitterResponse}
@@ -36,9 +37,11 @@ private class TwitterPool(refresh: Set[Long] => Map[Long, Twitter], interval: Lo
 
   private var state: State[Twitter] = new StateCollection[Twitter]()
   private var lastRefreshedTime: Long = 0L
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   private def refreshOnDemand(at: Long = System.currentTimeMillis()): Unit = {
     if (lastRefreshedTime + interval < at) {
+      logger.trace("Refresh state: Before: {}, After: {}", lastRefreshedTime, at)
       state = state.add(refresh(state.idSet))
       lastRefreshedTime = at
     }
@@ -49,9 +52,11 @@ private class TwitterPool(refresh: Set[Long] => Map[Long, Twitter], interval: Lo
     refreshOnDemand(at)
     state.leaseAny(at) match {
       case (Lease(twitter), newState) =>
+        logger.trace("Twitter available: {}", twitter)
         state = newState
         twitter.body
       case (Wait(until), newState) =>
+        logger.trace("Twitter unavailable: wait until {} from now {} epoch time in milliseconds", until, at)
         state = newState
         TimeUnit.MILLISECONDS.sleep(until - at)
         lease()
@@ -66,13 +71,16 @@ private class TwitterPool(refresh: Set[Long] => Map[Long, Twitter], interval: Lo
     refreshOnDemand(at)
     state.leaseSome(id, at) match {
       case (Lease(twitter), newState) =>
+        logger.trace("Twitter available: {}", twitter)
         state = newState
         twitter.body
       case (Wait(until), newState) =>
+        logger.trace("Twitter unavailable: wait until {} from now {} epoch time in milliseconds", until, at)
         state = newState
         TimeUnit.MILLISECONDS.sleep(until - at)
         lease(id)
       case (WaitNotify(twitter), newState) =>
+        logger.trace("Twitter unavailable: wait notify for Twitter:{}", twitter.hashCode())
         state = newState
         twitter.synchronized(twitter.wait())
         lease(id)
@@ -82,9 +90,11 @@ private class TwitterPool(refresh: Set[Long] => Map[Long, Twitter], interval: Lo
     }
   }
 
-  override def release(id: Long, resource: Twitter, response: TwitterResponse): Unit = state.synchronized {
+  override def release(id: Long, twitter: Twitter, response: TwitterResponse): Unit = state.synchronized {
     val limit = response.getRateLimitStatus
-    state = state.release(Resource(id, limit.getRemaining, limit.getResetTimeInSeconds.toLong * 1000, resource))
-    resource.synchronized(resource.notify())
+    val resource = Resource(id, limit.getRemaining, limit.getResetTimeInSeconds.toLong * 1000, twitter)
+    logger.trace("Release twitter : {}", resource)
+    state = state.release(resource)
+    twitter.synchronized(twitter.notify())
   }
 }

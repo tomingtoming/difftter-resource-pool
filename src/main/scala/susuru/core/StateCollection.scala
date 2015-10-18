@@ -16,8 +16,10 @@ case class StateCollection[R](_idMap: Map[Long, Resource[R]]) extends State[R] {
   override def leaseAny(at: Long): (Result[R], State[R]) = {
     idMap.find {
       case (id, res) =>
-        // Resource is not now leasing, within the time limit, within the limit number of times.
-        at < res.until && 0 < res.count
+        // Resource is not now leasing.
+        //   * Within the time limit, within the limit number of times.
+        //   * Without the time limit (limit number unknown).
+        res.count != -1 && (at < res.until && 0 < res.count) || (res.until < at)
     } match {
       case Some((id, res)) =>
         (Lease(res), StateCollection(idMap.updated(id, res.copy(count = -1))))

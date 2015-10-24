@@ -47,7 +47,7 @@ private class TwitterPool(refresh: Set[Long] => Map[Long, Twitter], interval: Lo
     }
   }
 
-  override def lease(): Twitter = state.synchronized {
+  override def leaseAny(): Twitter = state.synchronized {
     val at: Long = System.currentTimeMillis()
     refreshOnDemand(at)
     state.leaseAny(at) match {
@@ -59,14 +59,14 @@ private class TwitterPool(refresh: Set[Long] => Map[Long, Twitter], interval: Lo
         logger.trace("Twitter unavailable: wait until {} from now {} epoch time in milliseconds", until, at)
         state = newState
         TimeUnit.MILLISECONDS.sleep(until - at)
-        lease()
+        leaseAny()
       case (response, newState) =>
         state = newState
         throw new IllegalStateException(state.toString)
     }
   }
 
-  override def lease(id: Long): Twitter = state.synchronized {
+  override def leaseSome(id: Long): Twitter = state.synchronized {
     val at: Long = System.currentTimeMillis()
     refreshOnDemand(at)
     state.leaseSome(id, at) match {
@@ -78,12 +78,12 @@ private class TwitterPool(refresh: Set[Long] => Map[Long, Twitter], interval: Lo
         logger.trace("Twitter unavailable: wait until {} from now {} epoch time in milliseconds", until, at)
         state = newState
         TimeUnit.MILLISECONDS.sleep(until - at)
-        lease(id)
+        leaseSome(id)
       case (WaitNotify(twitter), newState) =>
         logger.trace("Twitter unavailable: wait notify for Twitter:{}", twitter.hashCode())
         state = newState
         twitter.synchronized(twitter.wait())
-        lease(id)
+        leaseSome(id)
       case (response, newState) =>
         state = newState
         throw new IllegalStateException(state.toString)

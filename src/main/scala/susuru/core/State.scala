@@ -9,5 +9,5 @@ trait State[R] {
 
   def leaseSome(id: Long, at: Long): (Result[R], State[R])
 
-  def release(resource: Resource[R]): State[R]
+  def release(id: Long, resourceOption: Option[Resource[R]]): State[R]
 }

@@ -42,7 +42,16 @@ case class StateCollection[R](_idMap: Map[Long, Resource[R]]) extends State[R] {
       (NotExists(), this)
   }
 
-  override def release(resource: Resource[R]): State[R] = {
-    StateCollection(idMap.updated(resource.id, resource))
+  override def release(id: Long, resourceOption: Option[Resource[R]]): State[R] = resourceOption match {
+    case Some(resource) =>
+      StateCollection(idMap.updated(id, resource))
+    case None => idMap.get(id) match {
+      case Some(resource) =>
+        // Exceptional condition: remains unknown until next reset time.
+        StateCollection(idMap.updated(id, resource.copy(count = 0)))
+      case None =>
+        //　Exceptional condition: leased resource is not exists. do nothing.
+        this
+    }
   }
 }

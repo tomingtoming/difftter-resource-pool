@@ -1123,7 +1123,11 @@ public class TwitterWrapper implements Twitter, FriendsFollowersResources, Users
 
     @Override
     public long getId() throws TwitterException, IllegalStateException {
-        return 0;
+        if (id != -1) {
+            return id;
+        } else {
+            throw new IllegalStateException("Twitter does not have id");
+        }
     }
 
     @Override
@@ -1158,7 +1162,14 @@ public class TwitterWrapper implements Twitter, FriendsFollowersResources, Users
 
     @Override
     public User verifyCredentials() throws TwitterException {
-        throw new TwitterException("Sorry! not implemented yet");
+        if (id != -1) {
+            Twitter twitter = pool.leaseSome(id);
+            User result = twitter.verifyCredentials();
+            pool.release(twitter.getId(), twitter, result);
+            return result;
+        } else {
+            throw new IllegalStateException("Twitter does not have id");
+        }
     }
 
     @Override

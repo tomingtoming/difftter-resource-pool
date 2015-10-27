@@ -41,7 +41,7 @@ private class TwitterPool(refresh: Set[Long] => Map[Long, Twitter], interval: Lo
 
   private def refreshOnDemand(family: String, at: Long = System.currentTimeMillis()): Unit = {
     if (lastRefreshedTimes.getOrElse(family, 0L) + interval < at) {
-      logger.trace("Refresh state: Before: {}, After: {}", lastRefreshedTimes, at)
+      logger.trace(s"Refresh state: Before($family): ${lastRefreshedTimes.get(family)}, After: $at")
       val newState = states.getOrElse(family, new StateCollection[Twitter]())
       states = states.updated(family, newState.add(refresh(newState.idSet)))
       lastRefreshedTimes = lastRefreshedTimes.updated(family, at)
@@ -53,11 +53,11 @@ private class TwitterPool(refresh: Set[Long] => Map[Long, Twitter], interval: Lo
     refreshOnDemand(family, at)
     states.getOrElse(family, new StateCollection[Twitter]()).leaseAny(at) match {
       case (Lease(twitter), newState) =>
-        logger.trace("Twitter available: {}", twitter)
+        logger.trace(s"Twitter available($family): $twitter")
         states = states.updated(family, newState)
         twitter.body
       case (Wait(until), newState) =>
-        logger.trace("Twitter unavailable: wait until {} from now {} epoch time in milliseconds", until, at)
+        logger.trace(s"Twitter unavailable($family): wait until $until from now $at epoch time in milliseconds")
         states = states.updated(family, newState)
         TimeUnit.MILLISECONDS.sleep(until - at)
         leaseAny(family)
@@ -72,16 +72,16 @@ private class TwitterPool(refresh: Set[Long] => Map[Long, Twitter], interval: Lo
     refreshOnDemand(family, at)
     states.getOrElse(family, new StateCollection[Twitter]()).leaseSome(id, at) match {
       case (Lease(twitter), newState) =>
-        logger.trace("Twitter available: {}", twitter)
+        logger.trace(s"Twitter available($family): $twitter")
         states = states.updated(family, newState)
         twitter.body
       case (Wait(until), newState) =>
-        logger.trace("Twitter unavailable: wait until {} from now {} epoch time in milliseconds", until, at)
+        logger.trace(s"Twitter unavailable($family): wait until $until from now $at epoch time in milliseconds")
         states = states.updated(family, newState)
         TimeUnit.MILLISECONDS.sleep(until - at)
         leaseSome(family, id)
       case (WaitNotify(twitter), newState) =>
-        logger.trace("Twitter unavailable: wait notify for Twitter:{}", twitter.hashCode())
+        logger.trace(s"Twitter unavailable($family): wait notify for Twitter: ${twitter.hashCode()}")
         states = states.updated(family, newState)
         twitter.synchronized(twitter.wait())
         leaseSome(family, id)
@@ -93,7 +93,7 @@ private class TwitterPool(refresh: Set[Long] => Map[Long, Twitter], interval: Lo
 
   override def release(family: String, id: Long, twitter: Twitter, response: TwitterResponse): Unit = states.synchronized {
     val resource = Option(response.getRateLimitStatus).map { limit =>
-      logger.trace("Release twitter : TwitterResponse.getRateLimitStatus -> {}", limit)
+      logger.trace(s"Release twitter($family): TwitterResponse.getRateLimitStatus -> $limit")
       Resource(id, limit.getRemaining, limit.getResetTimeInSeconds.toLong * 1000 + 1000, twitter)
     }
     states.get(family) match {

@@ -191,9 +191,9 @@ public class TwitterWrapper implements Twitter, FriendsFollowersResources, Users
     @Override
     public IDs getFriendsIDs(long cursor) throws TwitterException {
         if (id != -1) {
-            Twitter twitter = pool.leaseSome(id);
+            Twitter twitter = pool.leaseSome(ResourceFamily.friends, id);
             IDs result = twitter.getFriendsIDs(cursor);
-            pool.release(twitter.getId(), twitter, result);
+            pool.release(ResourceFamily.friends, twitter.getId(), twitter, result);
             return result;
         } else {
             throw new IllegalStateException("Twitter does not have id");
@@ -202,42 +202,42 @@ public class TwitterWrapper implements Twitter, FriendsFollowersResources, Users
 
     @Override
     public IDs getFriendsIDs(long userId, long cursor) throws TwitterException {
-        Twitter twitter = pool.leaseAny();
+        Twitter twitter = pool.leaseAny(ResourceFamily.friends);
         IDs result = twitter.getFriendsIDs(userId, cursor);
-        pool.release(twitter.getId(), twitter, result);
+        pool.release(ResourceFamily.friends, twitter.getId(), twitter, result);
         return result;
     }
 
     @Override
     public IDs getFriendsIDs(long userId, long cursor, int count) throws TwitterException {
-        Twitter twitter = pool.leaseAny();
+        Twitter twitter = pool.leaseAny(ResourceFamily.friends);
         IDs result = twitter.getFriendsIDs(userId, cursor, count);
-        pool.release(twitter.getId(), twitter, result);
+        pool.release(ResourceFamily.friends, twitter.getId(), twitter, result);
         return result;
     }
 
     @Override
     public IDs getFriendsIDs(String screenName, long cursor) throws TwitterException {
-        Twitter twitter = pool.leaseAny();
+        Twitter twitter = pool.leaseAny(ResourceFamily.friends);
         IDs result = twitter.getFriendsIDs(screenName, cursor);
-        pool.release(twitter.getId(), twitter, result);
+        pool.release(ResourceFamily.friends, twitter.getId(), twitter, result);
         return result;
     }
 
     @Override
     public IDs getFriendsIDs(String screenName, long cursor, int count) throws TwitterException {
-        Twitter twitter = pool.leaseAny();
+        Twitter twitter = pool.leaseAny(ResourceFamily.friends);
         IDs result = twitter.getFriendsIDs(screenName, cursor, count);
-        pool.release(twitter.getId(), twitter, result);
+        pool.release(ResourceFamily.friends, twitter.getId(), twitter, result);
         return result;
     }
 
     @Override
     public IDs getFollowersIDs(long cursor) throws TwitterException {
         if (id != -1) {
-            Twitter twitter = pool.leaseSome(id);
+            Twitter twitter = pool.leaseSome(ResourceFamily.followers, id);
             IDs result = twitter.getFollowersIDs(cursor);
-            pool.release(twitter.getId(), twitter, result);
+            pool.release(ResourceFamily.followers, twitter.getId(), twitter, result);
             return result;
         } else {
             throw new IllegalStateException("Twitter does not have id");
@@ -246,33 +246,33 @@ public class TwitterWrapper implements Twitter, FriendsFollowersResources, Users
 
     @Override
     public IDs getFollowersIDs(long userId, long cursor) throws TwitterException {
-        Twitter twitter = pool.leaseAny();
+        Twitter twitter = pool.leaseAny(ResourceFamily.followers);
         IDs result = twitter.getFollowersIDs(userId, cursor);
-        pool.release(twitter.getId(), twitter, result);
+        pool.release(ResourceFamily.followers, twitter.getId(), twitter, result);
         return result;
     }
 
     @Override
     public IDs getFollowersIDs(long userId, long cursor, int count) throws TwitterException {
-        Twitter twitter = pool.leaseAny();
+        Twitter twitter = pool.leaseAny(ResourceFamily.followers);
         IDs result = twitter.getFollowersIDs(userId, cursor, count);
-        pool.release(twitter.getId(), twitter, result);
+        pool.release(ResourceFamily.followers, twitter.getId(), twitter, result);
         return result;
     }
 
     @Override
     public IDs getFollowersIDs(String screenName, long cursor) throws TwitterException {
-        Twitter twitter = pool.leaseAny();
+        Twitter twitter = pool.leaseAny(ResourceFamily.followers);
         IDs result = twitter.getFollowersIDs(screenName, cursor);
-        pool.release(twitter.getId(), twitter, result);
+        pool.release(ResourceFamily.followers, twitter.getId(), twitter, result);
         return result;
     }
 
     @Override
     public IDs getFollowersIDs(String screenName, long cursor, int count) throws TwitterException {
-        Twitter twitter = pool.leaseAny();
+        Twitter twitter = pool.leaseAny(ResourceFamily.followers);
         IDs result = twitter.getFollowersIDs(screenName, cursor, count);
-        pool.release(twitter.getId(), twitter, result);
+        pool.release(ResourceFamily.followers, twitter.getId(), twitter, result);
         return result;
     }
 
@@ -1163,9 +1163,9 @@ public class TwitterWrapper implements Twitter, FriendsFollowersResources, Users
     @Override
     public User verifyCredentials() throws TwitterException {
         if (id != -1) {
-            Twitter twitter = pool.leaseSome(id);
+            Twitter twitter = pool.leaseSome(ResourceFamily.none, id);
             User result = twitter.verifyCredentials();
-            pool.release(twitter.getId(), twitter, result);
+            pool.release(ResourceFamily.none, twitter.getId(), twitter, result);
             return result;
         } else {
             throw new IllegalStateException("Twitter does not have id");
@@ -1279,9 +1279,9 @@ public class TwitterWrapper implements Twitter, FriendsFollowersResources, Users
 
     @Override
     public ResponseList<User> lookupUsers(long... longs) throws TwitterException {
-        Twitter twitter = pool.leaseAny();
+        Twitter twitter = pool.leaseAny(ResourceFamily.users);
         ResponseList<User> result = twitter.lookupUsers(longs);
-        pool.release(twitter.getId(), twitter, result);
+        pool.release(ResourceFamily.users, twitter.getId(), twitter, result);
         return result;
     }
 

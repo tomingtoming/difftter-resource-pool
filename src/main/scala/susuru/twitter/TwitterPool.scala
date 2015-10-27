@@ -35,67 +35,73 @@ object TwitterPool {
 
 private class TwitterPool(refresh: Set[Long] => Map[Long, Twitter], interval: Long) extends Pool[Twitter, TwitterResponse] {
 
-  private var state: State[Twitter] = new StateCollection[Twitter]()
-  private var lastRefreshedTime: Long = 0L
+  private var states: Map[String, State[Twitter]] = Map.empty
+  private var lastRefreshedTimes: Map[String, Long] = Map.empty
   private val logger = LoggerFactory.getLogger(this.getClass)
 
-  private def refreshOnDemand(at: Long = System.currentTimeMillis()): Unit = {
-    if (lastRefreshedTime + interval < at) {
-      logger.trace("Refresh state: Before: {}, After: {}", lastRefreshedTime, at)
-      state = state.add(refresh(state.idSet))
-      lastRefreshedTime = at
+  private def refreshOnDemand(family: String, at: Long = System.currentTimeMillis()): Unit = {
+    if (lastRefreshedTimes.getOrElse(family, 0L) + interval < at) {
+      logger.trace("Refresh state: Before: {}, After: {}", lastRefreshedTimes, at)
+      val newState = states.getOrElse(family, new StateCollection[Twitter]())
+      states = states.updated(family, newState.add(refresh(newState.idSet)))
+      lastRefreshedTimes = lastRefreshedTimes.updated(family, at)
     }
   }
 
-  override def leaseAny(): Twitter = state.synchronized {
+  override def leaseAny(family: String): Twitter = states.synchronized {
     val at: Long = System.currentTimeMillis()
-    refreshOnDemand(at)
-    state.leaseAny(at) match {
+    refreshOnDemand(family, at)
+    states.getOrElse(family, new StateCollection[Twitter]()).leaseAny(at) match {
       case (Lease(twitter), newState) =>
         logger.trace("Twitter available: {}", twitter)
-        state = newState
+        states = states.updated(family, newState)
         twitter.body
       case (Wait(until), newState) =>
         logger.trace("Twitter unavailable: wait until {} from now {} epoch time in milliseconds", until, at)
-        state = newState
+        states = states.updated(family, newState)
         TimeUnit.MILLISECONDS.sleep(until - at)
-        leaseAny()
+        leaseAny(family)
       case (response, newState) =>
-        state = newState
-        throw new IllegalStateException(state.toString)
+        states = states.updated(family, newState)
+        throw new IllegalStateException(states.toString())
     }
   }
 
-  override def leaseSome(id: Long): Twitter = state.synchronized {
+  override def leaseSome(family: String, id: Long): Twitter = states.synchronized {
     val at: Long = System.currentTimeMillis()
-    refreshOnDemand(at)
-    state.leaseSome(id, at) match {
+    refreshOnDemand(family, at)
+    states.getOrElse(family, new StateCollection[Twitter]()).leaseSome(id, at) match {
       case (Lease(twitter), newState) =>
         logger.trace("Twitter available: {}", twitter)
-        state = newState
+        states = states.updated(family, newState)
         twitter.body
       case (Wait(until), newState) =>
         logger.trace("Twitter unavailable: wait until {} from now {} epoch time in milliseconds", until, at)
-        state = newState
+        states = states.updated(family, newState)
         TimeUnit.MILLISECONDS.sleep(until - at)
-        leaseSome(id)
+        leaseSome(family, id)
       case (WaitNotify(twitter), newState) =>
         logger.trace("Twitter unavailable: wait notify for Twitter:{}", twitter.hashCode())
-        state = newState
+        states = states.updated(family, newState)
         twitter.synchronized(twitter.wait())
-        leaseSome(id)
+        leaseSome(family, id)
       case (response, newState) =>
-        state = newState
-        throw new IllegalStateException(state.toString)
+        states = states.updated(family, newState)
+        throw new IllegalStateException(states.toString())
     }
   }
 
-  override def release(id: Long, twitter: Twitter, response: TwitterResponse): Unit = state.synchronized {
+  override def release(family: String, id: Long, twitter: Twitter, response: TwitterResponse): Unit = states.synchronized {
     val resource = Option(response.getRateLimitStatus).map { limit =>
       logger.trace("Release twitter : TwitterResponse.getRateLimitStatus -> {}", limit)
       Resource(id, limit.getRemaining, limit.getResetTimeInSeconds.toLong * 1000 + 1000, twitter)
     }
-    state = state.release(id, resource)
+    states.get(family) match {
+      case Some(state) =>
+        state.release(id, resource)
+      case None =>
+        throw new IllegalStateException(states.toString())
+    }
     twitter.synchronized(twitter.notify())
   }
 }

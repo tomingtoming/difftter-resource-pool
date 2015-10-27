@@ -98,7 +98,7 @@ private class TwitterPool(refresh: Set[Long] => Map[Long, Twitter], interval: Lo
     }
     states.get(family) match {
       case Some(state) =>
-        state.release(id, resource)
+        states = states.updated(family, state.release(id, resource))
       case None =>
         throw new IllegalStateException(states.toString())
     }

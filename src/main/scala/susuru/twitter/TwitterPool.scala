@@ -10,9 +10,9 @@ import twitter4j.{Twitter, TwitterResponse}
 object TwitterPool {
   private var pool: TwitterPool = null
 
-  def singleton(refresh: Set[Long] => Map[Long, Twitter], interval: Long = 300000): Unit = this.synchronized {
+  def singleton(refresh: Set[Long] => Map[Long, Twitter], invalidate: Twitter => Unit, interval: Long = 300000): Unit = this.synchronized {
     if (pool == null) {
-      pool = new TwitterPool(refresh, interval)
+      pool = new TwitterPool(refresh, invalidate, interval)
     }
   }
 
@@ -33,7 +33,7 @@ object TwitterPool {
   }
 }
 
-private class TwitterPool(refresh: Set[Long] => Map[Long, Twitter], interval: Long) extends Pool[Twitter, TwitterResponse] {
+private class TwitterPool(refresh: Set[Long] => Map[Long, Twitter], _invalidate: Twitter => Unit, interval: Long) extends Pool[Twitter, TwitterResponse] {
 
   private var states: Map[String, State[Twitter]] = Map.empty
   private var lastRefreshedTimes: Map[String, Long] = Map.empty
@@ -103,5 +103,9 @@ private class TwitterPool(refresh: Set[Long] => Map[Long, Twitter], interval: Lo
         throw new IllegalStateException(states.toString())
     }
     twitter.synchronized(twitter.notify())
+  }
+
+  override def invalidate(resource: Twitter): Unit = {
+    this._invalidate(resource)
   }
 }

@@ -7,4 +7,6 @@ trait Pool[RSC, RSP] {
   def leaseSome(family: String, id: Long): RSC
 
   def release(family: String, id: Long, resource: RSC, response: RSP): Unit
+
+  def invalidate(resource: RSC): Unit
 }

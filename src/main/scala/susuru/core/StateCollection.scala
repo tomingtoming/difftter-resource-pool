@@ -32,7 +32,7 @@ case class StateCollection[R](_idMap: Map[Long, Resource[R]]) extends State[R] {
     case Some(res) if res.count < 0 =>
       // Resource is now leasing.
       (WaitNotify(res.body), this)
-    case Some(res) if res.until < at && 0 == res.count =>
+    case Some(res) if at < res.until && 0 == res.count =>
       // Within the time limit, limit the number of times over.
       (Wait(res.until), this)
     case Some(res) =>
